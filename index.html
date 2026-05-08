@@ -475,28 +475,31 @@
             const lastUpdateElement = document.getElementById('lastUpdate');
             const stressInput = document.getElementById('stressInput');
 
+            // Преобразуем level в число
+            const numericLevel = parseInt(level);
+
             // Обновляем текст уровня
-            stressLevelElement.textContent = level + '%';
+            stressLevelElement.textContent = numericLevel + '%';
 
             // Обновляем поле ввода администратора
             if (stressInput) {
-                stressInput.value = level;
+                stressInput.value = numericLevel;
             }
 
             // Определяем цвет в зависимости от уровня
             let color;
-            if (level <= 29) {
+            if (numericLevel <= 29) {
                 color = '#4CAF50'; // Зеленый
-            } else if (level <= 49) {
+            } else if (numericLevel <= 49) {
                 color = '#FFC107'; // Желтый
-            } else if (level <= 79) {
+            } else if (numericLevel <= 79) {
                 color = '#FF9800'; // Оранжевый
             } else {
                 color = '#F44336'; // Красный
             }
 
             // Обновляем полоску прогресса
-            progressFillElement.style.width = level + '%';
+            progressFillElement.style.width = numericLevel + '%';
             progressFillElement.style.backgroundColor = color;
             progressFillElement.style.color = color;
 
