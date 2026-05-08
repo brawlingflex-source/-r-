@@ -366,6 +366,11 @@
             // Показываем панель администратора, если пользователь - администратор
             if (isAdmin) {
                 document.getElementById('adminControls').style.display = 'block';
+                // Опускаем кнопку Выйти для администратора
+                document.querySelector('.logout-btn-top').style.top = '80px';
+            } else {
+                // Возвращаем кнопку Выйти на обычное место для обычных пользователей
+                document.querySelector('.logout-btn-top').style.top = '20px';
             }
 
             // Загружаем данные из Firebase
@@ -515,6 +520,11 @@
 
                 if (isAdmin) {
                     document.getElementById('adminControls').style.display = 'block';
+                    // Опускаем кнопку Выйти для администратора
+                    document.querySelector('.logout-btn-top').style.top = '80px';
+                } else {
+                    // Возвращаем кнопку Выйти на обычное место для обычных пользователей
+                    document.querySelector('.logout-btn-top').style.top = '20px';
                 }
 
                 // Загружаем данные из Firebase
