@@ -221,6 +221,27 @@
             color: #8a8aaa;
         }
 
+        .logout-btn-top {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background: rgba(244, 67, 54, 0.8);
+            border: 1px solid #f44336;
+            border-radius: 8px;
+            color: #ffffff;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            z-index: 1000;
+        }
+
+        .logout-btn-top:hover {
+            background: rgba(244, 67, 54, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(244, 67, 54, 0.3);
+        }
+
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -271,6 +292,7 @@
 
         <!-- Основной экран -->
         <div class="main-screen" id="mainScreen">
+            <button class="logout-btn-top" onclick="logout()">Выйти</button>
             <div class="header">
                 <h1 class="title">Индекс напряжённости в дыре</h1>
             </div>
