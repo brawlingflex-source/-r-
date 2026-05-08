@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Индекс напряжённости в дыре</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto Mono', monospace;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #e0e0e0;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 600px;
+            padding: 20px;
+        }
+
+        /* Стили для экрана входа */
+        .login-screen {
+            background: rgba(15, 15, 35, 0.9);
+            border: 1px solid #2a2a4a;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .login-title {
+            text-align: center;
+            color: #4a4a6a;
+            font-size: 24px;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 10px;
+            color: #6a6a8a;
+            font-size: 14px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 15px;
+            background: rgba(20, 20, 40, 0.8);
+            border: 1px solid #2a2a4a;
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #4a4a6a;
+            box-shadow: 0 0 10px rgba(74, 74, 106, 0.3);
+        }
+
+        .continue-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #2a2a4a 0%, #3a3a5a 100%);
+            border: none;
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .continue-btn:hover {
+            background: linear-gradient(135deg, #3a3a5a 0%, #4a4a6a 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(74, 74, 106, 0.3);
+        }
+
+        /* Стили для основного экрана */
+        .main-screen {
+            display: none;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .title {
+            font-size: 28px;
+            color: #8a8aaa;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 0 0 20px rgba(138, 138, 170, 0.3);
+        }
+
+        .stress-container {
+            background: rgba(15, 15, 35, 0.9);
+            border: 1px solid #2a2a4a;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .stress-label {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #6a6a8a;
+            font-size: 18px;
+        }
+
+        .stress-level {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #e0e0e0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: rgba(20, 20, 40, 0.8);
+            border-radius: 15px;
+            overflow: hidden;
+            border: 1px solid #2a2a4a;
+            margin-bottom: 20px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            transition: all 0.5s ease;
+            border-radius: 15px;
+            box-shadow: 0 0 20px currentColor;
+        }
+
+        .last-update {
+            text-align: center;
+            color: #4a4a6a;
+            font-size: 14px;
+            margin-top: 20px;
+        }
+
+        /* Стили для администратора */
+        .admin-controls {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #2a2a4a;
+        }
+
+        .admin-label {
+            color: #8a8aaa;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .stress-slider {
+            flex: 1;
+            -webkit-appearance: none;
+            height: 8px;
+            background: rgba(20, 20, 40, 0.8);
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .stress-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #4a4a6a;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .stress-slider::-webkit-slider-thumb:hover {
+            background: #6a6a8a;
+            transform: scale(1.2);
+        }
+
+        .logout-btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: transparent;
+            border: 1px solid #4a4a6a;
+            border-radius: 8px;
+            color: #6a6a8a;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .logout-btn:hover {
+            background: rgba(74, 74, 106, 0.2);
+            color: #8a8aaa;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Адаптивность для мобильных устройств */
+        @media (max-width: 480px) {
+            .container {
+                width: 95%;
+                padding: 15px;
+            }
+
+            .login-screen {
+                padding: 25px;
+            }
+
+            .title {
+                font-size: 22px;
+            }
+
+            .stress-level {
+                font-size: 20px;
+            }
+
+            .progress-bar {
+                height: 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Экран входа -->
+        <div class="login-screen" id="loginScreen">
+            <h1 class="login-title">Вход в систему</h1>
+            <div class="input-group">
+                <label for="username">Введите ваше имя:</label>
+                <input type="text" id="username" placeholder="Имя пользователя" autocomplete="off">
+            </div>
+            <button class="continue-btn" onclick="login()">Продолжить</button>
+        </div>
+
+        <!-- Основной экран -->
+        <div class="main-screen" id="mainScreen">
+            <div class="header">
+                <h1 class="title">Индекс напряжённости в дыре</h1>
+            </div>
+
+            <div class="stress-container">
+                <div class="stress-label">Уровень напряженности:</div>
+                <div class="stress-level" id="stressLevel">0%</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%;"></div>
+                </div>
+                <div class="last-update" id="lastUpdate">Последнее обновление: не было</div>
+
+                <!-- Панель администратора -->
+                <div class="admin-controls" id="adminControls" style="display: none;">
+                    <div class="admin-label">Панель администратора</div>
+                    <div class="input-group">
+                        <label for="stressInput">Введите уровень напряженности (%):</label>
+                        <input type="number" id="stressInput" min="0" max="100" value="0" placeholder="0-100">
+                    </div>
+                    <button class="continue-btn" onclick="updateStressLevelFromInput()">Обновить</button>
+                    <button class="logout-btn" onclick="logout()">Выйти</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA_T7nr0mSN0iDy1V5E2xL1xIoCytvBJKY",
+            authDomain: "dacha-5bae1.firebaseapp.com",
+            projectId: "dacha-5bae1",
+            storageBucket: "dacha-5bae1.firebasestorage.app",
+            messagingSenderId: "337482565534",
+            appId: "1:337482565534:web:6652b4a72da825d0e7f88f",
+            measurementId: "G-WMV0GE2HVW"
+        };
+
+        // Инициализация Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Глобальные переменные
+        let currentUser = null;
+        let isAdmin = false;
+
+        // Функция входа
+        window.login = async function() {
+            const usernameInput = document.getElementById('username');
+            const username = usernameInput.value.trim();
+
+            if (!username) {
+                alert('Пожалуйста, введите ваше имя');
+                return;
+            }
+
+            currentUser = username;
+            isAdmin = username === 'Михаил';
+
+            // Сохраняем данные в localStorage
+            localStorage.setItem('currentUser', currentUser);
+            localStorage.setItem('isAdmin', isAdmin);
+
+            // Показываем основной экран
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('mainScreen').style.display = 'block';
+
+            // Показываем панель администратора, если пользователь - администратор
+            if (isAdmin) {
+                document.getElementById('adminControls').style.display = 'block';
+            }
+
+            // Загружаем данные из Firebase
+            loadStressLevel();
+        };
+
+        // Функция выхода
+        window.logout = function() {
+            localStorage.removeItem('currentUser');
+            localStorage.removeItem('isAdmin');
+            currentUser = null;
+            isAdmin = false;
+
+            document.getElementById('mainScreen').style.display = 'none';
+            document.getElementById('loginScreen').style.display = 'block';
+            document.getElementById('username').value = '';
+        };
+
+        // Функция обновления уровня напряженности
+        window.updateStressLevel = async function(value) {
+            if (!isAdmin) return;
+
+            const stressLevel = parseInt(value);
+            const now = new Date();
+            const mskTime = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Moscow' }));
+
+            const timestamp = mskTime.toLocaleString('ru-RU', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+
+            try {
+                await setDoc(doc(db, 'stress', 'current'), {
+                    level: stressLevel,
+                    lastUpdate: timestamp,
+                    updatedBy: currentUser
+                });
+            } catch (error) {
+                console.error('Ошибка при обновлении уровня:', error);
+            }
+        };
+
+        // Функция обновления уровня напряженности из текстового поля
+        window.updateStressLevelFromInput = async function() {
+            if (!isAdmin) return;
+
+            const stressInput = document.getElementById('stressInput');
+            const stressLevel = parseInt(stressInput.value);
+
+            // Проверка валидности введенного значения
+            if (isNaN(stressLevel) || stressLevel < 0 || stressLevel > 100) {
+                alert('Пожалуйста, введите число от 0 до 100');
+                return;
+            }
+
+            const now = new Date();
+            const mskTime = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Moscow' }));
+
+            const timestamp = mskTime.toLocaleString('ru-RU', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+
+            try {
+                await setDoc(doc(db, 'stress', 'current'), {
+                    level: stressLevel,
+                    lastUpdate: timestamp,
+                    updatedBy: currentUser
+                });
+            } catch (error) {
+                console.error('Ошибка при обновлении уровня:', error);
+            }
+        };
+
+        // Функция загрузки уровня напряженности
+        async function loadStressLevel() {
+            try {
+                const docRef = doc(db, 'stress', 'current');
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    updateUI(data.level, data.lastUpdate, data.updatedBy);
+                }
+            } catch (error) {
+                console.error('Ошибка при загрузке уровня:', error);
+            }
+        }
+
+        // Функция обновления интерфейса
+        function updateUI(level, lastUpdate, updatedBy) {
+            const stressLevelElement = document.getElementById('stressLevel');
+            const progressFillElement = document.getElementById('progressFill');
+            const lastUpdateElement = document.getElementById('lastUpdate');
+            const stressInput = document.getElementById('stressInput');
+
+            // Обновляем текст уровня
+            stressLevelElement.textContent = level + '%';
+
+            // Обновляем поле ввода администратора
+            if (stressInput) {
+                stressInput.value = level;
+            }
+
+            // Определяем цвет в зависимости от уровня
+            let color;
+            if (level <= 25) {
+                color = '#4CAF50'; // Зеленый
+            } else if (level <= 50) {
+                color = '#FFC107'; // Желтый
+            } else if (level <= 75) {
+                color = '#FF9800'; // Оранжевый
+            } else {
+                color = '#F44336'; // Красный
+            }
+
+            // Обновляем полоску прогресса
+            progressFillElement.style.width = level + '%';
+            progressFillElement.style.backgroundColor = color;
+            progressFillElement.style.color = color;
+
+            // Обновляем информацию о последнем обновлении
+            if (lastUpdate && updatedBy) {
+                lastUpdateElement.textContent = `Последнее обновление: ${lastUpdate} (МСК) - ${updatedBy}`;
+            }
+        }
+
+        // Проверка сохраненного входа при загрузке страницы
+        window.addEventListener('load', async function() {
+            const savedUser = localStorage.getItem('currentUser');
+            const savedAdmin = localStorage.getItem('isAdmin');
+
+            if (savedUser) {
+                currentUser = savedUser;
+                isAdmin = savedAdmin === 'true';
+
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('mainScreen').style.display = 'block';
+
+                if (isAdmin) {
+                    document.getElementById('adminControls').style.display = 'block';
+                }
+
+                // Загружаем данные из Firebase
+                loadStressLevel();
+
+                // Подписываемся на изменения в реальном времени
+                const docRef = doc(db, 'stress', 'current');
+                onSnapshot(docRef, (doc) => {
+                    if (doc.exists()) {
+                        const data = doc.data();
+                        updateUI(data.level, data.lastUpdate, data.updatedBy);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
