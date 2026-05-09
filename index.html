@@ -253,6 +253,51 @@
             }
         }
 
+        .activity-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #2a2a4a;
+        }
+
+        .activity-list {
+            margin-top: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .activity-item {
+            padding: 12px 15px;
+            background: rgba(20, 20, 40, 0.6);
+            border: 1px solid #2a2a4a;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+        }
+
+        .activity-item:hover {
+            background: rgba(30, 30, 50, 0.8);
+            border-color: #4a4a6a;
+        }
+
+        .activity-user {
+            font-weight: bold;
+            color: #e0e0e0;
+        }
+
+        .activity-time {
+            font-size: 12px;
+            color: #8a8aaa;
+        }
+
+        .activity-online {
+            color: #4CAF50;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
         /* Адаптивность для мобильных устройств */
         @media (max-width: 480px) {
             .container {
@@ -314,6 +359,14 @@
                     </div>
                     <button class="continue-btn" onclick="updateStressLevelFromInput()">Обновить</button>
                     <button class="logout-btn" onclick="logout()">Выйти</button>
+
+                    <!-- Последняя активность -->
+                    <div class="activity-section">
+                        <div class="admin-label">Последняя активность</div>
+                        <div class="activity-list" id="activityList">
+                            <div class="activity-item">Загрузка данных...</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -341,6 +394,8 @@
         // Глобальные переменные
         let currentUser = null;
         let isAdmin = false;
+        let activityInterval = null;
+        const ONLINE_TIMEOUT = 5 * 60 * 1000; // 5 минут в миллисекундах
 
         // Функция входа
         window.login = async function() {
@@ -368,17 +423,139 @@
                 document.getElementById('adminControls').style.display = 'block';
                 // Опускаем кнопку Выйти для администратора
                 document.querySelector('.logout-btn-top').style.top = '80px';
+                // Загружаем активность пользователей
+                loadUserActivity();
             } else {
                 // Возвращаем кнопку Выйти на обычное место для обычных пользователей
                 document.querySelector('.logout-btn-top').style.top = '20px';
             }
 
+            // Обновляем активность пользователя
+            updateUserActivity();
+
+            // Запускаем периодическое обновление активности
+            if (activityInterval) {
+                clearInterval(activityInterval);
+            }
+            activityInterval = setInterval(updateUserActivity, 60000); // Обновляем каждую минуту
+
             // Загружаем данные из Firebase
             loadStressLevel();
         };
 
+        // Функция обновления статуса активности пользователя
+        async function updateUserActivity() {
+            if (!currentUser) return;
+
+            const now = new Date();
+            const mskTime = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Moscow' }));
+
+            const timestamp = mskTime.toLocaleString('ru-RU', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+
+            try {
+                // Получаем текущие данные о пользователях
+                const usersDoc = await getDoc(doc(db, 'userActivity', 'users'));
+                let usersData = {};
+
+                if (usersDoc.exists()) {
+                    usersData = usersDoc.data().users || {};
+                }
+
+                // Обновляем данные текущего пользователя
+                usersData[currentUser] = {
+                    lastVisit: timestamp,
+                    lastVisitTimestamp: Date.now(),
+                    isOnline: true
+                };
+
+                // Сохраняем обновленные данные
+                await setDoc(doc(db, 'userActivity', 'users'), {
+                    users: usersData
+                });
+            } catch (error) {
+                console.error('Ошибка при обновлении активности:', error);
+            }
+        }
+
+        // Функция загрузки активности пользователей
+        function loadUserActivity() {
+            if (!isAdmin) return;
+
+            const activityList = document.getElementById('activityList');
+            activityList.innerHTML = '<div class="activity-item">Загрузка данных...</div>';
+
+            // Подписываемся на изменения в активности пользователей
+            onSnapshot(doc(db, 'userActivity', 'users'), (doc) => {
+                if (doc.exists()) {
+                    const users = doc.data().users || {};
+                    const now = Date.now();
+
+                    activityList.innerHTML = '';
+
+                    const sortedUsers = Object.entries(users)
+                        .sort((a, b) => b[1].lastVisitTimestamp - a[1].lastVisitTimestamp);
+
+                    if (sortedUsers.length === 0) {
+                        activityList.innerHTML = '<div class="activity-item">Нет данных о пользователях</div>';
+                        return;
+                    }
+
+                    sortedUsers.forEach(([username, data]) => {
+                        const isOnline = now - data.lastVisitTimestamp < ONLINE_TIMEOUT;
+                        const statusText = isOnline ? 'В сети' : data.lastVisit;
+                        const statusClass = isOnline ? 'activity-online' : 'activity-time';
+
+                        const activityItem = document.createElement('div');
+                        activityItem.className = 'activity-item';
+                        activityItem.innerHTML = `
+                            <span class="activity-user">${username}</span>
+                            <span class="${statusClass}">${statusText}</span>
+                        `;
+
+                        activityList.appendChild(activityItem);
+                    });
+                } else {
+                    activityList.innerHTML = '<div class="activity-item">Нет данных о пользователях</div>';
+                }
+            });
+        }
+
         // Функция выхода
         window.logout = function() {
+            // Очищаем интервал обновления активности
+            if (activityInterval) {
+                clearInterval(activityInterval);
+                activityInterval = null;
+            }
+
+            // Обновляем статус пользователя на офлайн перед выходом
+            if (currentUser) {
+                getDoc(doc(db, 'userActivity', 'users')).then((usersDoc) => {
+                    let usersData = {};
+
+                    if (usersDoc.exists()) {
+                        usersData = usersDoc.data().users || {};
+                    }
+
+                    // Обновляем статус текущего пользователя на офлайн
+                    if (usersData[currentUser]) {
+                        usersData[currentUser].isOnline = false;
+
+                        // Сохраняем обновленные данные
+                        setDoc(doc(db, 'userActivity', 'users'), {
+                            users: usersData
+                        });
+                    }
+                });
+            }
+
             localStorage.removeItem('currentUser');
             localStorage.removeItem('isAdmin');
             currentUser = null;
@@ -525,10 +702,21 @@
                     document.getElementById('adminControls').style.display = 'block';
                     // Опускаем кнопку Выйти для администратора
                     document.querySelector('.logout-btn-top').style.top = '80px';
+                    // Загружаем активность пользователей
+                    loadUserActivity();
                 } else {
                     // Возвращаем кнопку Выйти на обычное место для обычных пользователей
                     document.querySelector('.logout-btn-top').style.top = '20px';
                 }
+
+                // Обновляем активность пользователя
+                updateUserActivity();
+
+                // Запускаем периодическое обновление активности
+                if (activityInterval) {
+                    clearInterval(activityInterval);
+                }
+                activityInterval = setInterval(updateUserActivity, 60000); // Обновляем каждую минуту
 
                 // Загружаем данные из Firebase
                 loadStressLevel();
